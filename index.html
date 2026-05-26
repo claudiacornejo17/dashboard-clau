@@ -246,7 +246,7 @@ const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 
 async function loadFromCloud(){
   try{
-    const r=await fetch(${SUPA_URL}/rest/v1/dashboard?id=eq.clau&select=data,{headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}});
+    const r=await fetch(`${SUPA_URL}/rest/v1/dashboard?id=eq.clau&select=data`,{headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}});
     const d=await r.json();
     if(d&&d[0]&&d[0].data&&Object.keys(d[0].data).length>0){
       state={...initState(),...d[0].data};
@@ -257,7 +257,7 @@ async function loadFromCloud(){
 
 async function saveToCloud(){
   try{
-    await fetch(${SUPA_URL}/rest/v1/dashboard?id=eq.clau,{
+    await fetch(`${SUPA_URL}/rest/v1/dashboard?id=eq.clau`,{
       method:'PATCH',
       headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
       body:JSON.stringify({data:state,updated_at:new Date().toISOString()})
@@ -308,11 +308,11 @@ function renderTodos(){
   state.todos.forEach((t,i)=>{
     const isDone=!!done[todayKey+'_'+i];const cat=(t.cat||'Personal').replace('.','');
     const d=document.createElement('div');d.className='todo-item';d.draggable=true;
-    d.innerHTML=<div class="todo-check ${isDone?'done':''}" onclick="toggleTodo(${i})">${isDone?chk():''}</div><span class="todo-text ${isDone?'done':''}">${t.text}</span><span class="cat-pill cat-${cat}">${t.cat}</span><button class="del-btn" onclick="deleteTodo(${i})">✕</button>;
+    d.innerHTML=`<div class="todo-check ${isDone?'done':''}" onclick="toggleTodo(${i})">${isDone?chk():''}</div><span class="todo-text ${isDone?'done':''}">${t.text}</span><span class="cat-pill cat-${cat}">${t.cat}</span><button class="del-btn" onclick="deleteTodo(${i})">✕</button>`;
     d.addEventListener('dragstart',e=>{dragSrc={type:'todo',idx:i};e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain','todo');});
     el.appendChild(d);
   });
-  const pending=state.todos.filter((,i)=>!(state.todoDone||{})[todayKey+''+i]).length;
+  const pending=state.todos.filter((_,i)=>!(state.todoDone||{})[todayKey+'_'+i]).length;
   document.getElementById('todo-badge').textContent=pending+' pendientes';
 }
 function addTodo(){const inp=document.getElementById('new-todo'),cat=document.getElementById('todo-cat').value;if(!inp.value.trim())return;state.todos.push({text:inp.value.trim(),cat});inp.value='';saveState();renderTodos();}
@@ -325,10 +325,10 @@ function renderHabits(){
   state.habits.forEach((h,i)=>{
     const isDone=!!state.habitDone[todayKey+'_'+i];
     const d=document.createElement('div');d.className='habit-item';
-    d.innerHTML=<div class="habit-check ${isDone?'done':''}" onclick="toggleHabit(${i})">${isDone?chk():''}</div><span style="font-size:13px;color:${isDone?'var(--text-ter)':'var(--text)'};flex:1;font-weight:500;${isDone?'text-decoration:line-through':''}">${h}</span><button class="del-btn" onclick="deleteHabit(${i})">✕</button>;
+    d.innerHTML=`<div class="habit-check ${isDone?'done':''}" onclick="toggleHabit(${i})">${isDone?chk():''}</div><span style="font-size:13px;color:${isDone?'var(--text-ter)':'var(--text)'};flex:1;font-weight:500;${isDone?'text-decoration:line-through':''}">${h}</span><button class="del-btn" onclick="deleteHabit(${i})">✕</button>`;
     el.appendChild(d);
   });
-  const done=state.habits.filter((,i)=>!!state.habitDone[todayKey+''+i]).length;
+  const done=state.habits.filter((_,i)=>!!state.habitDone[todayKey+'_'+i]).length;
   document.getElementById('habit-badge').textContent=done+' / '+state.habits.length;
 }
 function addHabit(){const inp=document.getElementById('new-habit');if(!inp.value.trim())return;state.habits.push(inp.value.trim());inp.value='';saveState();renderHabits();}
@@ -344,12 +344,12 @@ function renderWeekBoard(){
     const tasks=state.weekTasks[dk]||[];
     const col=document.createElement('div');col.className='day-col';
     const hdr=document.createElement('div');hdr.className='day-col-header';
-    hdr.innerHTML=<div class="day-col-name">${['L','M','Mi','J','V','S','D'][(d.getDay()+6)%7]}</div><div class="day-col-num ${isToday?'today-num':''}">${d.getDate()}</div>;
+    hdr.innerHTML=`<div class="day-col-name">${['L','M','Mi','J','V','S','D'][(d.getDay()+6)%7]}</div><div class="day-col-num ${isToday?'today-num':''}">${d.getDate()}</div>`;
     col.appendChild(hdr);
     const drop=document.createElement('div');drop.className='day-drop';
     tasks.forEach((t,ti)=>{
       const chip=document.createElement('div');chip.className='week-task';chip.draggable=true;
-      chip.innerHTML=<span style="flex:1">${t.text}</span><button class="del-btn" style="font-size:10px" onclick="deleteWeekTask('${dk}',${ti})">✕</button>;
+      chip.innerHTML=`<span style="flex:1">${t.text}</span><button class="del-btn" style="font-size:10px" onclick="deleteWeekTask('${dk}',${ti})">✕</button>`;
       chip.addEventListener('dragstart',e=>{dragSrc={type:'week',dk,idx:ti};e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain','week');e.stopPropagation();});
       drop.appendChild(chip);
     });
@@ -374,7 +374,7 @@ function dueDateLabel(due){
   if(!due)return'<span class="due-normal">—</span>';
   const diff=Math.round((new Date(due)-new Date(todayKey))/86400000);
   const parts=due.split('-');const label=parseInt(parts[2])+' '+MONTHS[parseInt(parts[1])-1];
-  if(diff<0)return`<span class="due-overdue">⚠️ ${label}</span>`;
+  if(diff<0)return`<span class="due-overdue">⚠ ${label}</span>`;
   if(diff<=3)return`<span class="due-soon">◉ ${label}</span>`;
   return`<span class="due-normal">${label}</span>`;
 }
@@ -383,11 +383,11 @@ function renderProjTable(){
   const tbody=document.getElementById('proj-tbody');tbody.innerHTML='';
   const filtered=state.projTasks.filter(t=>projFilter==='Todos'||t.cat===projFilter||t.status===projFilter);
   document.getElementById('proj-badge').textContent=state.projTasks.length+' tarea'+(state.projTasks.length!==1?'s':'');
-  if(!filtered.length){tbody.innerHTML=<tr><td colspan="5" style="text-align:center;color:var(--text-ter);padding:1.5rem;font-size:13px">Sin tareas — agrega una abajo ↓</td></tr>;return;}
+  if(!filtered.length){tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;color:var(--text-ter);padding:1.5rem;font-size:13px">Sin tareas — agrega una abajo ↓</td></tr>`;return;}
   filtered.forEach(t=>{
     const i=state.projTasks.indexOf(t);const sCls='s-'+t.status.replace(' ','-');
     const tr=document.createElement('tr');
-    tr.innerHTML=<td><span class="proj-cat pcat-${t.cat}">${t.cat}</span></td><td style="font-size:13px;font-weight:500">${t.task}</td><td><span class="status-pill ${sCls}" onclick="cycleStatus(${i})">${t.status}</span></td><td>${dueDateLabel(t.due)}</td><td><button class="del-btn" onclick="deleteProjTask(${i})">✕</button></td>;
+    tr.innerHTML=`<td><span class="proj-cat pcat-${t.cat}">${t.cat}</span></td><td style="font-size:13px;font-weight:500">${t.task}</td><td><span class="status-pill ${sCls}" onclick="cycleStatus(${i})">${t.status}</span></td><td>${dueDateLabel(t.due)}</td><td><button class="del-btn" onclick="deleteProjTask(${i})">✕</button></td>`;
     tbody.appendChild(tr);
   });
 }
@@ -402,14 +402,14 @@ function cycleStatus(i){const cur=state.projTasks[i].status;state.projTasks[i].s
 function deleteProjTask(i){state.projTasks.splice(i,1);saveState();renderProjTable();}
 
 function switchTab(tab){notesTab=tab;document.getElementById('tab-notas').classList.toggle('active',tab==='notas');document.getElementById('tab-refs').classList.toggle('active',tab==='refs');renderNotes();}
-function catOptions(val){return'<option value="">Proyecto...</option>'+CATS.map(c=><option${val===c?' selected':''}>${c}</option>).join('');}
+function catOptions(val){return'<option value="">Proyecto...</option>'+CATS.map(c=>`<option${val===c?' selected':''}>${c}</option>`).join('');}
 function renderNotes(){
   if(!state.notes)state.notes=[];if(!state.refs)state.refs=[];
   const grid=document.getElementById('notes-grid');grid.innerHTML='';
   if(notesTab==='notas'){
     state.notes.forEach((n,i)=>{
       const card=document.createElement('div');card.className='note-card';
-      card.innerHTML=<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px"><input class="note-card-title-input" style="flex:1" value="${n.title||''}" placeholder="Título..." oninput="updateItem('notes',${i},'title',this.value)" /><button class="del-btn" onclick="deleteItem('notes',${i})">✕</button></div><div><select style="width:100%" onchange="updateItem('notes',${i},'cat',this.value)">${catOptions(n.cat)}</select></div><textarea class="note-body" placeholder="Escribe aquí..." oninput="updateItem('notes',${i},'body',this.value)">${n.body||''}</textarea>;
+      card.innerHTML=`<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px"><input class="note-card-title-input" style="flex:1" value="${n.title||''}" placeholder="Título..." oninput="updateItem('notes',${i},'title',this.value)" /><button class="del-btn" onclick="deleteItem('notes',${i})">✕</button></div><div><select style="width:100%" onchange="updateItem('notes',${i},'cat',this.value)">${catOptions(n.cat)}</select></div><textarea class="note-body" placeholder="Escribe aquí..." oninput="updateItem('notes',${i},'body',this.value)">${n.body||''}</textarea>`;
       grid.appendChild(card);
     });
     if(state.notes.length<8){const add=document.createElement('div');add.className='add-note-card';add.innerHTML='+';add.onclick=()=>{state.notes.push({title:'',body:'',cat:''});saveState();renderNotes();};grid.appendChild(add);}
@@ -417,7 +417,7 @@ function renderNotes(){
     state.refs.forEach((r,i)=>{
       const tipoCls=REF_TIPO_CLS[r.tipo]||'rt-web';const estCls=REF_ESTADO_CLS[r.estado]||'re-sin';
       const card=document.createElement('div');card.className='note-card';
-      card.innerHTML=<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px"><input class="note-card-title-input" style="flex:1" value="${r.title||''}" placeholder="Título..." oninput="updateItem('refs',${i},'title',this.value)" /><button class="del-btn" onclick="deleteItem('refs',${i})">✕</button></div><div><select style="width:100%" onchange="updateItem('refs',${i},'cat',this.value)">${catOptions(r.cat)}</select></div><div style="display:flex;gap:5px"><select style="flex:1" onchange="updateItem('refs',${i},'tipo',this.value);renderNotes()">${REF_TIPOS.map(t=><option${r.tipo===t?' selected':''}>${t}</option>).join('')}</select><select style="flex:1" onchange="updateItem('refs',${i},'estado',this.value);renderNotes()">${REF_ESTADOS.map(e=><option${r.estado===e?' selected':''}>${e}</option>).join('')}</select></div><div style="display:flex;gap:5px"><span class="ref-tipo ${tipoCls}">${r.tipo||'Web'}</span><span class="ref-estado ${estCls}">${r.estado||'Sin revisar'}</span></div><input type="text" value="${r.url||''}" placeholder="URL o fuente..." style="font-size:12px;width:100%" oninput="updateItem('refs',${i},'url',this.value)" />;
+      card.innerHTML=`<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px"><input class="note-card-title-input" style="flex:1" value="${r.title||''}" placeholder="Título..." oninput="updateItem('refs',${i},'title',this.value)" /><button class="del-btn" onclick="deleteItem('refs',${i})">✕</button></div><div><select style="width:100%" onchange="updateItem('refs',${i},'cat',this.value)">${catOptions(r.cat)}</select></div><div style="display:flex;gap:5px"><select style="flex:1" onchange="updateItem('refs',${i},'tipo',this.value);renderNotes()">${REF_TIPOS.map(t=>`<option${r.tipo===t?' selected':''}>${t}</option>`).join('')}</select><select style="flex:1" onchange="updateItem('refs',${i},'estado',this.value);renderNotes()">${REF_ESTADOS.map(e=>`<option${r.estado===e?' selected':''}>${e}</option>`).join('')}</select></div><div style="display:flex;gap:5px"><span class="ref-tipo ${tipoCls}">${r.tipo||'Web'}</span><span class="ref-estado ${estCls}">${r.estado||'Sin revisar'}</span></div><input type="text" value="${r.url||''}" placeholder="URL o fuente..." style="font-size:12px;width:100%" oninput="updateItem('refs',${i},'url',this.value)" />`;
       grid.appendChild(card);
     });
     if(state.refs.length<8){const add=document.createElement('div');add.className='add-note-card';add.innerHTML='+';add.onclick=()=>{state.refs.push({title:'',cat:'',tipo:'Web',estado:'Sin revisar',url:''});saveState();renderNotes();};grid.appendChild(add);}
