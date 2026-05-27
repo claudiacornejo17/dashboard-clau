@@ -448,11 +448,12 @@ function renderTodos(){
   const done=state.todoDone||{};
   state.todos.forEach((t,i)=>{
     const isDone=!!done[todayKey+'_'+i];const cat=(t.cat||'Personal').replace('.','');
-    const d=document.createElement('div');d.className='todo-item';d.draggable=true;
-    d.innerHTML=`<div class="todo-check ${isDone?'done':''}" onclick="toggleTodo(${i})">${isDone?chk():''}</div><span class="todo-text ${isDone?'done':''}">${t.text}</span><span class="cat-pill cat-${cat}">${t.cat}</span><button class="del-btn" onclick="deleteTodo(${i})">✕</button>`;
-    d.addEventListener('dragstart',e=>{dragSrc={type:'todo',idx:i};e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain','todo');});
+    const d=document.createElement('div');
+    d.className='todo-item';d.dataset.si=i;
+    d.innerHTML=`<span class="drag-handle">⠿</span><div class="todo-check ${isDone?'done':''}" onclick="toggleTodo(${i})">${isDone?chk():''}</div><span class="todo-text ${isDone?'done':''}">${t.text}</span><span class="cat-pill cat-${cat}">${t.cat}</span><button class="del-btn" onclick="deleteTodo(${i})">✕</button>`;
     el.appendChild(d);
   });
+  addSortHandlers(el,state.todos,renderTodos);
   const pending=state.todos.filter((_,i)=>!(state.todoDone||{})[todayKey+'_'+i]).length;
   document.getElementById('todo-badge').textContent=pending+' pendientes';
 }
@@ -550,10 +551,11 @@ function renderProjTable(){
   if(!filtered.length){tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;color:var(--text-ter);padding:1.5rem;font-size:13px">Sin tareas — agrega una abajo ↓</td></tr>`;return;}
   filtered.forEach(t=>{
     const i=state.projTasks.indexOf(t);const sCls='s-'+t.status.replace(' ','-');
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td><span class="proj-cat pcat-${t.cat}">${t.cat}</span></td><td style="font-size:13px;font-weight:500">${t.task}</td><td><span class="status-pill ${sCls}" onclick="cycleStatus(${i})">${t.status}</span></td><td>${dueDateLabel(t.due)}</td><td><button class="del-btn" onclick="deleteProjTask(${i})">✕</button></td>`;
+    const tr=document.createElement('tr');tr.dataset.si=i;
+    tr.innerHTML=`<td><span class="drag-handle">⠿</span><span class="proj-cat pcat-${t.cat}">${t.cat}</span></td><td style="font-size:13px;font-weight:500">${t.task}</td><td><span class="status-pill ${sCls}" onclick="cycleStatus(${i})">${t.status}</span></td><td>${dueDateLabel(t.due)}</td><td><button class="del-btn" onclick="deleteProjTask(${i})">✕</button></td>`;
     tbody.appendChild(tr);
   });
+  addSortHandlers(tbody,state.projTasks,renderProjTable);
 }
 function addProjTask(){
   const cat=document.getElementById('np-cat').value,task=document.getElementById('np-task').value.trim(),status=document.getElementById('np-status').value,due=document.getElementById('np-due').value;
@@ -572,19 +574,21 @@ function renderNotes(){
   const grid=document.getElementById('notes-grid');grid.innerHTML='';
   if(notesTab==='notas'){
     state.notes.forEach((n,i)=>{
-      const card=document.createElement('div');card.className='note-card';
-      card.innerHTML=`<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px"><input class="note-card-title-input" style="flex:1" value="${n.title||''}" placeholder="Título..." oninput="updateItem('notes',${i},'title',this.value)"/><button class="del-btn" onclick="deleteItem('notes',${i})">✕</button></div><div><select style="width:100%" onchange="updateItem('notes',${i},'cat',this.value)">${catOptions(n.cat)}</select></div><textarea class="note-body" placeholder="Escribe aquí..." oninput="updateItem('notes',${i},'body',this.value)">${n.body||''}</textarea>`;
+      const card=document.createElement('div');card.className='note-card';card.dataset.si=i;
+      card.innerHTML=`<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px"><span class="drag-handle" style="margin-top:2px">⠿</span><input class="note-card-title-input" style="flex:1" value="${n.title||''}" placeholder="Título..." oninput="updateItem('notes',${i},'title',this.value)"/><button class="del-btn" onclick="deleteItem('notes',${i})">✕</button></div><div><select style="width:100%" onchange="updateItem('notes',${i},'cat',this.value)">${catOptions(n.cat)}</select></div><textarea class="note-body" placeholder="Escribe aquí..." oninput="updateItem('notes',${i},'body',this.value)">${n.body||''}</textarea>`;
       grid.appendChild(card);
     });
     if(state.notes.length<8){const add=document.createElement('div');add.className='add-note-card';add.innerHTML='+';add.onclick=()=>{state.notes.push({title:'',body:'',cat:''});saveState();renderNotes();};grid.appendChild(add);}
+    addSortHandlers(grid,state.notes,renderNotes);
   }else{
     state.refs.forEach((r,i)=>{
       const tipoCls=REF_TIPO_CLS[r.tipo]||'rt-web';const estCls=REF_ESTADO_CLS[r.estado]||'re-sin';
-      const card=document.createElement('div');card.className='note-card';
-      card.innerHTML=`<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px"><input class="note-card-title-input" style="flex:1" value="${r.title||''}" placeholder="Título..." oninput="updateItem('refs',${i},'title',this.value)"/><button class="del-btn" onclick="deleteItem('refs',${i})">✕</button></div><div><select style="width:100%" onchange="updateItem('refs',${i},'cat',this.value)">${catOptions(r.cat)}</select></div><div style="display:flex;gap:5px"><select style="flex:1" onchange="updateItem('refs',${i},'tipo',this.value);renderNotes()">${REF_TIPOS.map(t=>`<option${r.tipo===t?' selected':''}>${t}</option>`).join('')}</select><select style="flex:1" onchange="updateItem('refs',${i},'estado',this.value);renderNotes()">${REF_ESTADOS.map(e=>`<option${r.estado===e?' selected':''}>${e}</option>`).join('')}</select></div><div style="display:flex;gap:5px"><span class="ref-tipo ${tipoCls}">${r.tipo||'Web'}</span><span class="ref-estado ${estCls}">${r.estado||'Sin revisar'}</span></div><input type="text" value="${r.url||''}" placeholder="URL o fuente..." style="font-size:12px;width:100%" oninput="updateItem('refs',${i},'url',this.value)"/>`;
+      const card=document.createElement('div');card.className='note-card';card.dataset.si=i;
+      card.innerHTML=`<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px"><span class="drag-handle" style="margin-top:2px">⠿</span><input class="note-card-title-input" style="flex:1" value="${r.title||''}" placeholder="Título..." oninput="updateItem('refs',${i},'title',this.value)"/><button class="del-btn" onclick="deleteItem('refs',${i})">✕</button></div><div><select style="width:100%" onchange="updateItem('refs',${i},'cat',this.value)">${catOptions(r.cat)}</select></div><div style="display:flex;gap:5px"><select style="flex:1" onchange="updateItem('refs',${i},'tipo',this.value);renderNotes()">${REF_TIPOS.map(t=>`<option${r.tipo===t?' selected':''}>${t}</option>`).join('')}</select><select style="flex:1" onchange="updateItem('refs',${i},'estado',this.value);renderNotes()">${REF_ESTADOS.map(e=>`<option${r.estado===e?' selected':''}>${e}</option>`).join('')}</select></div><div style="display:flex;gap:5px"><span class="ref-tipo ${tipoCls}">${r.tipo||'Web'}</span><span class="ref-estado ${estCls}">${r.estado||'Sin revisar'}</span></div><input type="text" value="${r.url||''}" placeholder="URL o fuente..." style="font-size:12px;width:100%" oninput="updateItem('refs',${i},'url',this.value)"/>`;
       grid.appendChild(card);
     });
     if(state.refs.length<8){const add=document.createElement('div');add.className='add-note-card';add.innerHTML='+';add.onclick=()=>{state.refs.push({title:'',cat:'',tipo:'Web',estado:'Sin revisar',url:''});saveState();renderNotes();};grid.appendChild(add);}
+    addSortHandlers(grid,state.refs,renderNotes);
   }
 }
 function updateItem(arr,i,field,val){state[arr][i][field]=val;saveState();}
