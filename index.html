@@ -357,10 +357,17 @@ async function fetchCalendarEvents(){
     });
     if(!all.length){el.innerHTML='<div style="font-size:13px;color:var(--text-ter)">Sin eventos hoy 🎉</div>';return;}
     el.innerHTML='';
+    function fmtTime(dt){
+      if(!dt)return'';
+      const[h,m]=dt.slice(11,16).split(':').map(Number);
+      const ampm=h>=12?'pm':'am';
+      const h12=h%12||12;
+      return`${h12}:${String(m).padStart(2,'0')} ${ampm}`;
+    }
     all.forEach(ev=>{
       const isAllDay=!!ev.start.date;
-      const start=isAllDay?'Todo el día':ev.start.dateTime?.slice(11,16);
-      const end=isAllDay?'':' – '+ev.end.dateTime?.slice(11,16);
+      const start=isAllDay?'Todo el día':fmtTime(ev.start.dateTime);
+      const end=isAllDay?'':' – '+fmtTime(ev.end.dateTime);
       const d=document.createElement('div');d.className='cal-event';
       d.innerHTML=`
         <div class="cal-time">${start}${end}</div>
