@@ -310,6 +310,17 @@ const GCAL_SCOPE='https://www.googleapis.com/auth/calendar.readonly';
 let gcalToken=null;
 
 function initGoogleAuth(){
+  // Check if we're returning from OAuth redirect
+  const params=new URLSearchParams(window.location.hash.replace('#','?'));
+  const token=params.get('access_token');
+  if(token){
+    gcalToken=token;
+    // Clean URL
+    history.replaceState(null,'',window.location.pathname);
+    fetchCalendarEvents();
+    return;
+  }
+  // Load GSI script for desktop popup fallback
   const script=document.createElement('script');
   script.src='https://accounts.google.com/gsi/client';
   script.onload=()=>{
@@ -317,10 +328,7 @@ function initGoogleAuth(){
       client_id:GCAL_CLIENT_ID,
       scope:GCAL_SCOPE,
       callback:(resp)=>{
-        if(resp.access_token){
-          gcalToken=resp.access_token;
-          fetchCalendarEvents();
-        }
+        if(resp.access_token){gcalToken=resp.access_token;fetchCalendarEvents();}
       }
     });
   };
@@ -330,9 +338,17 @@ function initGoogleAuth(){
 function loadCalendar(){
   const el=document.getElementById('cal-events');
   el.innerHTML='<div style="font-size:13px;color:var(--text-ter)">Cargando eventos...</div>';
-  if(gcalToken){fetchCalendarEvents();}
-  else if(window.tokenClient){window.tokenClient.requestAccessToken();}
-  else{el.innerHTML='<div style="font-size:13px;color:var(--text-ter)">Cargando autenticación...</div>';setTimeout(()=>{if(window.tokenClient)window.tokenClient.requestAccessToken();},2000);}
+  if(gcalToken){fetchCalendarEvents();return;}
+  // Mobile: use redirect flow
+  const isMobile=/iPhone|iPad|Android/i.test(navigator.userAgent);
+  if(isMobile){
+    const redirect=encodeURIComponent('https://claudiacornejo17.github.io/dashboard-clau/');
+    const url=`https://accounts.google.com/o/oauth2/v2/auth?client_id=${GCAL_CLIENT_ID}&redirect_uri=${redirect}&response_type=token&scope=${encodeURIComponent(GCAL_SCOPE)}`;
+    window.location.href=url;
+  } else {
+    if(window.tokenClient)window.tokenClient.requestAccessToken();
+    else setTimeout(()=>{if(window.tokenClient)window.tokenClient.requestAccessToken();},1500);
+  }
 }
 
 async function fetchCalendarEvents(){
