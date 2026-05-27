@@ -82,11 +82,11 @@ button:hover{background:#015F5C}
 .filter-bar{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:.85rem}
 .filter-btn{font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);color:var(--text-sec);cursor:pointer;font-family:var(--font);font-weight:600;transition:all .15s}
 .filter-btn.active{background:var(--dd);color:#fff;border-color:var(--dd)}
-.cal-event{display:grid;grid-template-columns:80px 68px 1fr;align-items:center;gap:10px 8px;padding:7px 0;border-bottom:1px solid var(--border-light)}
+.cal-event{display:grid;grid-template-columns:72px 1fr auto;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--border-light)}
 .cal-event:last-child{border-bottom:none}
 .cal-time{font-size:11px;font-weight:600;color:var(--dd);white-space:nowrap}
-.cal-badge{font-size:10px;padding:3px 8px;border-radius:20px;font-weight:700;color:#fff;white-space:nowrap;display:inline-block}
-.cal-title{font-size:13px;color:var(--text);font-weight:600}
+.cal-badge{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600;white-space:nowrap}
+.cal-title{font-size:13px;color:var(--text);font-weight:500}
 .notes-tabs{display:flex;gap:6px;margin-bottom:.75rem}
 .notes-tab{font-size:12px;padding:4px 16px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);color:var(--text-sec);cursor:pointer;font-family:var(--font);font-weight:600;transition:all .15s}
 .notes-tab.active{background:var(--dd);color:#fff;border-color:var(--dd)}
@@ -303,7 +303,7 @@ const GCAL_CALENDARS=[
   {id:'claudiacornejo17@gmail.com',name:'Clau',color:'#E86C4F'},
   {id:'family13759095788826037398@group.calendar.google.com',name:'Familia',color:'#F4A24C'},
   {id:'hj4tnr621afb1qmttsujotqo0o@group.calendar.google.com',name:'Fotografía',color:'#DBAE8D'},
-  {id:'ignaciosch@gmail.com',name:'Ignacio',color:'#027A76'},
+  {id:'ignaciosch@gmail.com',name:'Ignacio',color:'#4A6882'},
 ];
 const GCAL_CLIENT_ID='310806006324-cbti4ojsurojn0avlqkthqa42cm0pb5i.apps.googleusercontent.com';
 const GCAL_SCOPE='https://www.googleapis.com/auth/calendar.readonly';
@@ -370,11 +370,11 @@ async function fetchCalendarEvents(){
       const d=document.createElement('div');d.className='cal-event';
       d.innerHTML=`
         <div class="cal-time">${start}${end}</div>
-        <div><span class="cal-badge" style="background:${ev._calColor}">${ev._calName}</span></div>
         <div>
           <div class="cal-title">${ev.summary||'Sin título'}</div>
           ${ev.location?`<div style="font-size:11px;color:var(--text-ter);margin-top:1px">📍 ${ev.location}</div>`:''}
-        </div>`;
+        </div>
+        <span class="cal-badge" style="background:${ev._calColor}22;color:${ev._calColor}">${ev._calName}</span>`;
       el.appendChild(d);
     });
   }catch(e){el.innerHTML='<div style="font-size:13px;color:var(--text-ter)">Error al cargar. <span style="cursor:pointer;color:var(--dd);text-decoration:underline" onclick="loadCalendar()">Reintentar</span></div>';}
