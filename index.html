@@ -315,21 +315,39 @@ function initGoogleAuth(){
   if(hash&&hash.includes('access_token')){
     const params=new URLSearchParams(hash.substring(1));
     const token=params.get('access_token');
+    const expiresIn=params.get('expires_in')||3600;
     if(token){
       gcalToken=token;
+      const expiry=Date.now()+(parseInt(expiresIn)-60)*1000;
+      localStorage.setItem('gcal_token',token);
+      localStorage.setItem('gcal_token_expiry',expiry);
       history.replaceState(null,'',window.location.pathname);
       fetchCalendarEvents();
       return;
     }
   }
+  // Check saved token
+  const saved=localStorage.getItem('gcal_token');
+  const expiry=parseInt(localStorage.getItem('gcal_token_expiry')||'0');
+  if(saved&&Date.now()<expiry){
+    gcalToken=saved;
+    fetchCalendarEvents();
+    return;
+  }
+  // Load GSI for desktop
   const script=document.createElement('script');
   script.src='https://accounts.google.com/gsi/client';
   script.onload=()=>{
     window.tokenClient=google.accounts.oauth2.initTokenClient({
-      client_id:GCAL_CLIENT_ID,
-      scope:GCAL_SCOPE,
+      client_id:GCAL_CLIENT_ID,scope:GCAL_SCOPE,
       callback:(resp)=>{
-        if(resp.access_token){gcalToken=resp.access_token;fetchCalendarEvents();}
+        if(resp.access_token){
+          gcalToken=resp.access_token;
+          const expiry=Date.now()+(3600-60)*1000;
+          localStorage.setItem('gcal_token',resp.access_token);
+          localStorage.setItem('gcal_token_expiry',expiry);
+          fetchCalendarEvents();
+        }
       }
     });
   };
@@ -340,7 +358,11 @@ function loadCalendar(){
   const el=document.getElementById('cal-events');
   el.innerHTML='<div style="font-size:13px;color:var(--text-ter)">Cargando eventos...</div>';
   if(gcalToken){fetchCalendarEvents();return;}
-  // Use redirect flow for all devices — most reliable
+  // Check saved token first
+  const saved=localStorage.getItem('gcal_token');
+  const expiry=parseInt(localStorage.getItem('gcal_token_expiry')||'0');
+  if(saved&&Date.now()<expiry){gcalToken=saved;fetchCalendarEvents();return;}
+  // Redirect flow
   const redirect=encodeURIComponent('https://claudiacornejo17.github.io/dashboard-clau/');
   const url=`https://accounts.google.com/o/oauth2/v2/auth?client_id=${GCAL_CLIENT_ID}&redirect_uri=${redirect}&response_type=token&scope=${encodeURIComponent(GCAL_SCOPE)}&prompt=consent`;
   window.location.href=url;
