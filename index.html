@@ -360,9 +360,8 @@ async function fetchCalendarEvents(){
     function fmtTime(dt){
       if(!dt)return'';
       const[h,m]=dt.slice(11,16).split(':').map(Number);
-      const ampm=h>=12?'pm':'am';
       const h12=h%12||12;
-      return`${h12}:${String(m).padStart(2,'0')} ${ampm}`;
+      return`${h12}:${String(m).padStart(2,'0')}`;
     }
     all.forEach(ev=>{
       const isAllDay=!!ev.start.date;
