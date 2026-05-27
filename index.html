@@ -359,7 +359,9 @@ async function fetchCalendarEvents(){
     el.innerHTML='';
     function fmtTime(dt){
       if(!dt)return'';
-      const[h,m]=dt.slice(11,16).split(':').map(Number);
+      const d=new Date(dt);
+      const h=d.getHours();
+      const m=d.getMinutes();
       const h12=h%12||12;
       return`${h12}:${String(m).padStart(2,'0')}`;
     }
