@@ -82,9 +82,9 @@ button:hover{background:#015F5C}
 .filter-bar{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:.85rem}
 .filter-btn{font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);color:var(--text-sec);cursor:pointer;font-family:var(--font);font-weight:600;transition:all .15s}
 .filter-btn.active{background:var(--dd);color:#fff;border-color:var(--dd)}
-.cal-event{display:flex;gap:10px;align-items:flex-start;padding:6px 0;border-bottom:1px solid var(--border-light)}
+.cal-event{display:grid;grid-template-columns:72px 80px 1fr;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border-light)}
 .cal-event:last-child{border-bottom:none}
-.cal-time{min-width:72px;font-size:11px;font-weight:600;color:var(--dd)}
+.cal-time{font-size:11px;font-weight:600;color:var(--dd)}
 .notes-tabs{display:flex;gap:6px;margin-bottom:.75rem}
 .notes-tab{font-size:12px;padding:4px 16px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);color:var(--text-sec);cursor:pointer;font-family:var(--font);font-weight:600;transition:all .15s}
 .notes-tab.active{background:var(--dd);color:#fff;border-color:var(--dd)}
@@ -299,9 +299,9 @@ function makeIcon(){
 
 const GCAL_CALENDARS=[
   {id:'claudiacornejo17@gmail.com',name:'Clau',color:'#E86C4F'},
-  {id:'family13759095788826037398@group.calendar.google.com',name:'Familia',color:'#027A76'},
-  {id:'hj4tnr621afb1qmttsujotqo0o@group.calendar.google.com',name:'Fotografía',color:'#F4A24C'},
-  {id:'ignaciosch@gmail.com',name:'Ignacio',color:'#5C7A8E'},
+  {id:'family13759095788826037398@group.calendar.google.com',name:'Familia',color:'#F4A24C'},
+  {id:'hj4tnr621afb1qmttsujotqo0o@group.calendar.google.com',name:'Fotografía',color:'#DBAE8D'},
+  {id:'ignaciosch@gmail.com',name:'Ignacio',color:'#027A76'},
 ];
 const GCAL_CLIENT_ID='310806006324-cbti4ojsurojn0avlqkthqa42cm0pb5i.apps.googleusercontent.com';
 const GCAL_SCOPE='https://www.googleapis.com/auth/calendar.readonly';
