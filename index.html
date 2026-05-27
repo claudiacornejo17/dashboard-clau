@@ -297,6 +297,12 @@ function makeIcon(){
   }catch(e){}
 }
 
+const GCAL_CALENDARS=[
+  {id:'claudiacornejo17@gmail.com',name:'Personal',color:'#E86C4F'},
+  {id:'family13759095788826037398@group.calendar.google.com',name:'Familia',color:'#027A76'},
+  {id:'hj4tnr621afb1qmttsujotqo0o@group.calendar.google.com',name:'Fotografía',color:'#F4A24C'},
+  {id:'ignaciosch@gmail.com',name:'Ignacio',color:'#BFDDCE'},
+];
 const GCAL_CLIENT_ID='310806006324-cbti4ojsurojn0avlqkthqa42cm0pb5i.apps.googleusercontent.com';
 const GCAL_SCOPE='https://www.googleapis.com/auth/calendar.readonly';
 let gcalToken=null;
@@ -333,22 +339,37 @@ async function fetchCalendarEvents(){
     const now=new Date();
     const start=new Date(now.getFullYear(),now.getMonth(),now.getDate()).toISOString();
     const end=new Date(now.getFullYear(),now.getMonth(),now.getDate(),23,59,59).toISOString();
-    const url=`https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${start}&timeMax=${end}&singleEvents=true&orderBy=startTime`;
-    const r=await fetch(url,{headers:{Authorization:'Bearer '+gcalToken}});
-    if(!r.ok){gcalToken=null;loadCalendar();return;}
-    const data=await r.json();
-    const events=data.items||[];
-    if(!events.length){el.innerHTML='<div style="font-size:13px;color:var(--text-ter)">Sin eventos hoy 🎉</div>';return;}
+    // fetch all calendars in parallel
+    const results=await Promise.all(GCAL_CALENDARS.map(async cal=>{
+      const url=`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(cal.id)}/events?timeMin=${start}&timeMax=${end}&singleEvents=true&orderBy=startTime`;
+      const r=await fetch(url,{headers:{Authorization:'Bearer '+gcalToken}});
+      if(!r.ok)return[];
+      const data=await r.json();
+      return(data.items||[]).map(ev=>({...ev,_calName:cal.name,_calColor:cal.color}));
+    }));
+    // merge and sort by start time
+    const all=results.flat().sort((a,b)=>{
+      const at=a.start.dateTime||a.start.date;
+      const bt=b.start.dateTime||b.start.date;
+      return at.localeCompare(bt);
+    });
+    if(!all.length){el.innerHTML='<div style="font-size:13px;color:var(--text-ter)">Sin eventos hoy 🎉</div>';return;}
     el.innerHTML='';
-    events.forEach(ev=>{
+    all.forEach(ev=>{
       const isAllDay=!!ev.start.date;
       const start=isAllDay?'Todo el día':ev.start.dateTime?.slice(11,16);
       const end=isAllDay?'':' – '+ev.end.dateTime?.slice(11,16);
       const d=document.createElement('div');d.className='cal-event';
-      d.innerHTML=`<div class="cal-time">${start}${end}</div><div style="flex:1"><div style="font-size:13px;color:var(--text);font-weight:600">${ev.summary||'Sin título'}</div>${ev.location?`<div style="font-size:11px;color:var(--text-ter);margin-top:1px">📍 ${ev.location}</div>`:''}</div>`;
+      d.innerHTML=`
+        <div class="cal-time">${start}${end}</div>
+        <div style="flex:1">
+          <div style="font-size:13px;color:var(--text);font-weight:600">${ev.summary||'Sin título'}</div>
+          ${ev.location?`<div style="font-size:11px;color:var(--text-ter);margin-top:1px">📍 ${ev.location}</div>`:''}
+        </div>
+        <span style="font-size:10px;padding:2px 7px;border-radius:20px;font-weight:600;background:${ev._calColor}22;color:${ev._calColor};flex-shrink:0">${ev._calName}</span>`;
       el.appendChild(d);
     });
-  }catch(e){el.innerHTML='<div style="font-size:13px;color:var(--text-ter)">Error al cargar eventos. <span style="cursor:pointer;color:var(--dd);text-decoration:underline" onclick="loadCalendar()">Reintentar</span></div>';}
+  }catch(e){el.innerHTML='<div style="font-size:13px;color:var(--text-ter)">Error al cargar. <span style="cursor:pointer;color:var(--dd);text-decoration:underline" onclick="loadCalendar()">Reintentar</span></div>';}
 }
 
 function renderTodos(){
