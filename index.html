@@ -291,10 +291,38 @@ function makeIcon(){
   try{
     const c=document.createElement('canvas');c.width=180;c.height=180;
     const ctx=c.getContext('2d');
+    // fondo gradiente July
     const g=ctx.createLinearGradient(0,0,180,180);
-    g.addColorStop(0,'#E86C4F');g.addColorStop(.5,'#F4A24C');g.addColorStop(1,'#027A76');
-    ctx.fillStyle=g;ctx.beginPath();ctx.roundRect(0,0,180,180,36);ctx.fill();
-    ctx.font='100px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('⭐',90,95);
+    g.addColorStop(0,'#E86C4F');
+    g.addColorStop(0.4,'#F4A24C');
+    g.addColorStop(0.7,'#F2A8C0');
+    g.addColorStop(1,'#027A76');
+    ctx.fillStyle=g;
+    ctx.beginPath();
+    ctx.roundRect(0,0,180,180,36);
+    ctx.fill();
+    // estrella blanca estilo Claude (5 puntas redondeadas)
+    ctx.save();
+    ctx.translate(90,88);
+    ctx.fillStyle='#fff';
+    ctx.shadowColor='rgba(255,255,255,0.4)';
+    ctx.shadowBlur=12;
+    const pts=5,outer=52,inner=22;
+    ctx.beginPath();
+    for(let i=0;i<pts*2;i++){
+      const r=i%2===0?outer:inner;
+      const a=(i*Math.PI/pts)-Math.PI/2;
+      const x=Math.cos(a)*r, y=Math.sin(a)*r;
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    }
+    ctx.closePath();
+    ctx.fill();
+    // pequeño círculo central estilo Claude
+    ctx.beginPath();
+    ctx.arc(0,0,8,0,Math.PI*2);
+    ctx.fillStyle='rgba(255,255,255,0.5)';
+    ctx.fill();
+    ctx.restore();
     document.getElementById('app-icon').href=c.toDataURL('image/png');
   }catch(e){}
 }
