@@ -298,10 +298,10 @@ function makeIcon(){
 }
 
 const GCAL_CALENDARS=[
-  {id:'claudiacornejo17@gmail.com',name:'Personal',color:'#E86C4F'},
+  {id:'claudiacornejo17@gmail.com',name:'Clau',color:'#E86C4F'},
   {id:'family13759095788826037398@group.calendar.google.com',name:'Familia',color:'#027A76'},
   {id:'hj4tnr621afb1qmttsujotqo0o@group.calendar.google.com',name:'Fotografía',color:'#F4A24C'},
-  {id:'ignaciosch@gmail.com',name:'Ignacio',color:'#BFDDCE'},
+  {id:'ignaciosch@gmail.com',name:'Ignacio',color:'#5C7A8E'},
 ];
 const GCAL_CLIENT_ID='310806006324-cbti4ojsurojn0avlqkthqa42cm0pb5i.apps.googleusercontent.com';
 const GCAL_SCOPE='https://www.googleapis.com/auth/calendar.readonly';
@@ -362,11 +362,11 @@ async function fetchCalendarEvents(){
       const d=document.createElement('div');d.className='cal-event';
       d.innerHTML=`
         <div class="cal-time">${start}${end}</div>
+        <span style="font-size:10px;padding:2px 8px;border-radius:20px;font-weight:700;background:${ev._calColor};color:#fff;flex-shrink:0;align-self:center">${ev._calName}</span>
         <div style="flex:1">
           <div style="font-size:13px;color:var(--text);font-weight:600">${ev.summary||'Sin título'}</div>
           ${ev.location?`<div style="font-size:11px;color:var(--text-ter);margin-top:1px">📍 ${ev.location}</div>`:''}
-        </div>
-        <span style="font-size:10px;padding:2px 7px;border-radius:20px;font-weight:600;background:${ev._calColor}22;color:${ev._calColor};flex-shrink:0">${ev._calName}</span>`;
+        </div>`;
       el.appendChild(d);
     });
   }catch(e){el.innerHTML='<div style="font-size:13px;color:var(--text-ter)">Error al cargar. <span style="cursor:pointer;color:var(--dd);text-decoration:underline" onclick="loadCalendar()">Reintentar</span></div>';}
